@@ -1,7 +1,105 @@
 ﻿@page "/"
+@inject IJSRuntime JSRuntime
 
-<h1>Hello, world!</h1>
+<div class="form-group row">
+    <button class="btn btn-primary col-sm-2 " @onclick="GenerateNewPassword">Generate Password</button>
+    <div class="col-sm-8">
+        <input id="currentPasswordInput" class="form-control-plaintext" readonly @bind="CurrentPassword">
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-secondary" @onclick="CopyPassword">Copy</button>
+    </div>
+</div>
 
-Welcome to your new app.
+<h5>Settings</h5>
+<hr/>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<div class="form-group">
+    <label for="passwordLengthInput">Password Length</label>
+    <input id="passwordLengthInput" class="form-control" type="number" @bind="PasswordLength">
+</div>
+
+<div class="form-check">
+    <input id="includeLowerCheck" class="form-check-input" type="checkbox" @bind="IncludeLower">
+    <label class="form-check-label" for="includeLowerCheck">Include Lower</label>
+</div>
+
+<div class="form-check">
+    <input id="includeUpperCheck" class="form-check-input" type="checkbox" @bind="IncludeUpper">
+    <label class="form-check-label" for="includeUpperCheck">Include Upper</label>
+</div>
+
+<div class="form-check">
+    <input id="includeNumbersCheck" class="form-check-input" type="checkbox" @bind="IncludeNumbers">
+    <label class="form-check-label" for="includeNumbersCheck">Include Numbers</label>
+</div>
+
+<div class="form-check">
+    <input id="includeSymbolsCheck" class="form-check-input" type="checkbox" @bind="IncludeSymbols">
+    <label class="form-check-label" for="includeSymbolsCheck">Include Symbols</label>
+</div>
+
+@code {
+    private string CurrentPassword = "";
+    private const string LowerCase = "abcdefghijklmnopqrstuvwxyz";
+    private const string UpperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private const string Numbers = "0123456789";
+    private const string Symbols = "!@#$%^&*(){}[]=<>/,.";
+    private bool IncludeLower = true;
+    private bool IncludeUpper = true;
+    private bool IncludeNumbers = true;
+    private bool IncludeSymbols = true;
+    private int PasswordLength = 15;
+
+    protected override void OnInitialized()
+    {
+        GenerateNewPassword();
+        base.OnInitialized();
+    }
+
+    private async Task CopyPassword()
+    {
+        await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", CurrentPassword);
+    }
+
+    private void GenerateNewPassword()
+    {
+        var alphabet = GetAlphabet();
+
+        var generatedPassword = "";
+
+        if(!string.IsNullOrWhiteSpace(alphabet))
+        {
+            var rnd = new Random();
+
+            for (int i = 0; i < PasswordLength; i++)
+            {
+                generatedPassword += alphabet[rnd.Next(alphabet.Count())];
+            }
+        }
+
+        CurrentPassword = generatedPassword;
+    }
+
+    private string GetAlphabet()
+    {
+        var alphabet = "";
+        if(IncludeLower)
+        {
+            alphabet += LowerCase;
+        }
+        if(IncludeUpper)
+        {
+            alphabet += UpperCase;
+        }
+        if(IncludeNumbers)
+        {
+            alphabet += Numbers;
+        }
+        if(IncludeSymbols)
+        {
+            alphabet += Symbols;
+        }
+        return alphabet;
+    }
+}
